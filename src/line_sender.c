@@ -32,6 +32,7 @@
 #include "mem_writer.h"
 #include "utf8.h"
 #include "aborting_malloc.h"
+#include "authentication.h"
 
 #include <errno.h>
 #include <stdarg.h>
@@ -967,13 +968,52 @@ bool line_sender_flush(
         return false;
 
     size_t len = 0;
-    const char* buf = mem_writer_peek(&sender->writer, &len);
+    // const char* buf = mem_writer_peek(&sender->writer, &len);
+    const char *buf = "testUser1\n";
+    len = strlen(buf);
 
     const bool send_ok = send_all(sender, (sock_len_t)len, buf);
     if (!send_ok)
     {
         const errno_t errnum = get_last_sock_err();
         char* err_descr = sock_err_str(errnum);
+        *err_out = err_printf(
+            &sender->state,
+            line_sender_error_socket_error,
+            "Could not flush buffered messages: %s.",
+            err_descr);
+        sock_err_str_free(err_descr);
+        return false;
+    }
+
+    char challenge[1024];
+    size_t recv_res = recv(sender->sock_fd, challenge, 1024, 0);
+    printf("challenge --- start ---\n");
+    for (size_t i = 0; i < recv_res; i++)
+    {
+        printf("%c", challenge[i]);
+    }
+    printf("challenge --- end ---\n");
+
+    size_t signature_len = 0;
+    char *sig;
+    signChallenge(challenge, recv_res - 1 /* skip \n */, &sig, &signature_len);
+
+    char *signature = malloc(signature_len + 1);
+    memcpy(signature, sig, signature_len);
+    signature[signature_len] = '\n';
+    printf("Signature base64: \"%s\"", signature);
+
+    const bool sign_send_ok = send_all(sender, (sock_len_t)signature_len + 1, signature);
+    if (sign_send_ok)
+        printf("Signature sent succesfull!\n");
+
+    const char *new_line = mem_writer_peek(&sender->writer, &len);
+    const bool line_ok = send_all(sender, (sock_len_t)len, new_line);
+    if (!line_ok)
+    {
+        const errno_t errnum = get_last_sock_err();
+        char *err_descr = sock_err_str(errnum);
         *err_out = err_printf(
             &sender->state,
             line_sender_error_socket_error,

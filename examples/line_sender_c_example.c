@@ -73,7 +73,7 @@ static bool example(const char* host, const char* port)
     if (!line_sender_utf8_init(
         &driver_value,
         12,
-        "Ranjit Singh",
+        "Marco Bonino",
         &err))
         goto on_error;
 

@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.15.0)
 project(c-questdb-client VERSION 1.0.0)
 
+set(CMAKE_VERBOSE_MAKEFILE ON)
+set(WITH_STDLIB 1)
+add_definitions( -DWITH_STDLIB=1 )
+
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 include(CPack)
@@ -72,6 +76,11 @@ endif(UNIX)
 add_library(
     c_questdb_client_static STATIC
     ${LIB_SOURCES})
+target_compile_definitions(
+    c_questdb_client_static
+    PUBLIC
+    WITH_STDLIB=1
+    )
 target_include_directories(
     c_questdb_client_static
     PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -85,6 +94,11 @@ if(UNIX)
     add_library(
         c_questdb_client_static_pic STATIC
         ${LIB_SOURCES})
+    target_compile_definitions(
+        c_questdb_client_static_pic
+            PUBLIC
+            WITH_STDLIB=1
+            )
     set_property(
         TARGET c_questdb_client_static_pic
         PROPERTY POSITION_INDEPENDENT_CODE ON)
@@ -95,34 +109,36 @@ if(UNIX)
 endif(UNIX)
 
 # Examples
-add_executable(
-    line_sender_c_example
-    examples/line_sender_c_example.c)
-target_link_libraries(
-    line_sender_c_example
-    c_questdb_client_static)  # example depending on static lib.
-add_executable(
-    line_sender_cpp_example
-    examples/line_sender_cpp_example.cpp)
-target_link_libraries(
-    line_sender_cpp_example
-    c_questdb_client)  # example depending on dynamic lib.
 
+#add_executable(
+#    line_sender_c_example
+#    examples/line_sender_c_example.c)
+#target_link_libraries(
+#    line_sender_c_example
+#    c_questdb_client_static)  # example depending on static lib.
+#
+#add_executable(
+#    line_sender_cpp_example
+#    examples/line_sender_cpp_example.cpp)
+#target_link_libraries(
+#    line_sender_cpp_example
+#    c_questdb_client)  # example depending on dynamic lib.
+#
 # Unit test binary.
-add_executable(
-    test_line_sender
-    test/mock_server.cpp
-    test/test_line_sender.cpp)
-target_link_libraries(
-    test_line_sender
-    c_questdb_client_static)
-target_include_directories(
-    test_line_sender
-    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-set_compile_flags(test_line_sender)
-add_test(
-    NAME test_line_sender
-    COMMAND test_line_sender)
+#add_executable(
+#    test_line_sender
+#    test/mock_server.cpp
+#    test/test_line_sender.cpp)
+#target_link_libraries(
+#    test_line_sender
+#    c_questdb_client_static)
+#target_include_directories(
+#    test_line_sender
+#    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+#set_compile_flags(test_line_sender)
+#add_test(
+#    NAME test_line_sender
+#    COMMAND test_line_sender)
 
 # System testing Python3 script.
 # This will download the latest QuestDB instance from Github,
