@@ -79,7 +79,10 @@ add_library(
     ${LIB_SOURCES})
 target_include_directories(
     c_questdb_client
-    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+    PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${LIBECC_SOURCE_DIR}/src
+)
 set_compile_flags(c_questdb_client)
 target_compile_definitions(
     c_questdb_client
@@ -104,7 +107,10 @@ add_library(
     ${LIB_SOURCES})
 target_include_directories(
     c_questdb_client_static
-    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+    PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${LIBECC_SOURCE_DIR}/src
+)
 set_compile_flags(c_questdb_client_static)
 if(WIN32)
     target_link_libraries(c_questdb_client_static wsock32 ws2_32)
@@ -120,7 +126,10 @@ if(UNIX)
         PROPERTY POSITION_INDEPENDENT_CODE ON)
     target_include_directories(
         c_questdb_client_static_pic
-        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+        PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${LIBECC_SOURCE_DIR}/src
+    )
     set_compile_flags(c_questdb_client_static_pic)
 endif(UNIX)
 

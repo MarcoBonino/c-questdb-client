@@ -2,9 +2,9 @@
 #include "authentication.h"
 #include "base64.h"
 
-#include "../libecc/src/lib_ecc_types.h"
-#include "../libecc/src/sig/ec_key.h"
-#include "../libecc/src/libsig.h"
+#include <lib_ecc_types.h>
+#include <sig/ec_key.h>
+#include <libsig.h>
 
 #include <assert.h>
 #include <stdio.h>
