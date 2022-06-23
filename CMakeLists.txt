@@ -1,10 +1,6 @@
 cmake_minimum_required(VERSION 3.15.0)
 project(c-questdb-client VERSION 1.0.0)
 
-set(CMAKE_VERBOSE_MAKEFILE ON)
-set(WITH_STDLIB 1)
-add_definitions( -DWITH_STDLIB=1 )
-
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 include(CPack)
@@ -20,11 +16,39 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+set(LIBECC_SOURCE_DIR "${CMAKE_BINARY_DIR}/libecc-src")
+set(LIBECC_BINARY_DIR "${CMAKE_BINARY_DIR}/libecc-build")
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+    set(LIBECC_DEBUG "debug")
+endif()
+include(ExternalProject)
+ExternalProject_Add(
+    libecc
+    GIT_REPOSITORY    https://github.com/ANSSI-FR/libecc.git
+    GIT_TAG           v0.9.5.1
+    SOURCE_DIR        ${LIBECC_SOURCE_DIR}
+    BINARY_DIR        ${LIBECC_BINARY_DIR}
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND     export BUILD_DIR=${LIBECC_BINARY_DIR}
+                      && make -j8 -C ${LIBECC_SOURCE_DIR} ${LIBECC_DEBUG} ${LIBECC_BINARY_DIR}/libsign.a
+    INSTALL_COMMAND   mv ${LIBECC_BINARY_DIR}/libsign.a ${CMAKE_BINARY_DIR}/libsign.a
+    TEST_COMMAND      ""
+)
+add_definitions(-DWITH_STDLIB=1)
+set(LIBECC_EXT_DEPS
+    ${LIBECC_SOURCE_DIR}/src/external_deps/print.c
+    ${LIBECC_SOURCE_DIR}/src/external_deps/rand.c
+)
+set_source_files_properties(${LIBECC_EXT_DEPS} PROPERTIES GENERATED TRUE)
+
 set(LIB_SOURCES
     src/aborting_malloc.c
     src/line_sender.c
     src/mem_writer.c
-    src/utf8.c)
+    src/utf8.c
+    src/base64.c
+    src/authentication.c
+)
 
 function(set_compile_flags TARGET_NAME)
     if(MSVC)
@@ -76,11 +100,6 @@ endif(UNIX)
 add_library(
     c_questdb_client_static STATIC
     ${LIB_SOURCES})
-target_compile_definitions(
-    c_questdb_client_static
-    PUBLIC
-    WITH_STDLIB=1
-    )
 target_include_directories(
     c_questdb_client_static
     PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -94,11 +113,6 @@ if(UNIX)
     add_library(
         c_questdb_client_static_pic STATIC
         ${LIB_SOURCES})
-    target_compile_definitions(
-        c_questdb_client_static_pic
-            PUBLIC
-            WITH_STDLIB=1
-            )
     set_property(
         TARGET c_questdb_client_static_pic
         PROPERTY POSITION_INDEPENDENT_CODE ON)
@@ -110,20 +124,25 @@ endif(UNIX)
 
 # Examples
 
-#add_executable(
-#    line_sender_c_example
-#    examples/line_sender_c_example.c)
-#target_link_libraries(
-#    line_sender_c_example
-#    c_questdb_client_static)  # example depending on static lib.
-#
+add_executable(
+    line_sender_c_example
+    examples/line_sender_c_example.c
+    ${LIBECC_EXT_DEPS}
+    )
+target_link_libraries(
+    line_sender_c_example
+    c_questdb_client_static)  # example depending on static lib.
+target_link_libraries(
+    line_sender_c_example
+    ${CMAKE_BINARY_DIR}/libsign.a)
+
 #add_executable(
 #    line_sender_cpp_example
 #    examples/line_sender_cpp_example.cpp)
 #target_link_libraries(
 #    line_sender_cpp_example
 #    c_questdb_client)  # example depending on dynamic lib.
-#
+
 # Unit test binary.
 #add_executable(
 #    test_line_sender

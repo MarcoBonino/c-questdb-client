@@ -18,15 +18,15 @@ void signChallenge(const char *challenge, size_t challenge_len, char **signature
     const char* SECP256R1_ECDSA_private_key_base64url = "5UjEMuA0Pj5pjK8a-fa24dyIf-Es5mYny3oE_Wmus48=";
 
     size_t private_key_len = 0;
-    const char* SECP256R1_ECDSA_private_key = base64_decode(SECP256R1_ECDSA_private_key_base64url, strlen(SECP256R1_ECDSA_private_key_base64url), &private_key_len, true);
+    const uint8_t* SECP256R1_ECDSA_private_key = base64_decode(SECP256R1_ECDSA_private_key_base64url, strlen(SECP256R1_ECDSA_private_key_base64url), &private_key_len, true);
     assert(private_key_len == 32);
 
     size_t signature_bin_len = 0;
-    char signature_bin[EC_MAX_SIGLEN];
+    uint8_t signature_bin[EC_MAX_SIGLEN];
 
     sign_bin_file(ec_name, ec_sig_name, hash_algo,
                   SECP256R1_ECDSA_private_key, (uint8_t)private_key_len,
-                  challenge, challenge_len,
+                  (const uint8_t*)challenge, challenge_len,
                   signature_bin, &signature_bin_len);
 
     size_t sig_len = 0;
@@ -60,7 +60,7 @@ int string_to_params(const char *ec_name, const char *ec_sig_name,
     {
         /* Get curve params from curve name */
         size_t curve_name_len = strlen(ec_name);
-        ret = ec_get_curve_params_by_name(ec_name, (uint8_t)curve_name_len + 1, &curve_params);
+        ret = ec_get_curve_params_by_name((const u8*)ec_name, (uint8_t)curve_name_len + 1, &curve_params);
         if ((ret) || (!curve_params))
         {
             printf("Error: EC curve %s is unknown!\n", ec_name);
@@ -85,14 +85,13 @@ int string_to_params(const char *ec_name, const char *ec_sig_name,
 }
 
 int sign_bin_file(const char *ec_name, const char *ec_sig_name, const char *hash_algorithm,
-                  const char *private_key, uint8_t private_key_len,
-                  const char *challenge, size_t challenge_len,
-                  char *sig, size_t *sig_len)
+                  const uint8_t *private_key, uint8_t private_key_len,
+                  const uint8_t *challenge, size_t challenge_len,
+                  uint8_t *sig, size_t *sig_len)
 {
     ec_key_pair key_pair;
     const ec_str_params *ec_str_p;
     ec_params params;
-    int ret, check;
     ec_alg_type sig_type;
     hash_alg_type hash_type;
     struct ec_sign_context sig_ctx;

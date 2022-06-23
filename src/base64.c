@@ -32,7 +32,7 @@ void build_decoding_table(bool is_url)
 
     *dec_table = malloc(256);
 
-    for (int i = 0; i < 64; i++)
+    for (size_t i = 0; i < 64; i++)
         (*dec_table)[(unsigned char)enc_table[i]] = i;
 }
 
@@ -42,7 +42,7 @@ void base64_cleanup()
     free(decoding_table_url);
 }
 
-char *base64_encode(const unsigned char *data, size_t input_length, size_t *output_length, bool is_url)
+char* base64_encode(const unsigned char *data, size_t input_length, size_t *output_length, bool is_url)
 {
     char *table = is_url ? encoding_table_url : encoding_table;
 
@@ -52,7 +52,7 @@ char *base64_encode(const unsigned char *data, size_t input_length, size_t *outp
     if (encoded_data == NULL)
         return NULL;
 
-    for (int i = 0, j = 0; i < input_length;)
+    for (size_t i = 0, j = 0; i < input_length;)
     {
 
         uint32_t octet_a = i < input_length ? (unsigned char)data[i++] : 0;
@@ -73,7 +73,7 @@ char *base64_encode(const unsigned char *data, size_t input_length, size_t *outp
     return encoded_data;
 }
 
-unsigned char *base64_decode(const char *data, size_t input_length, size_t *output_length, bool is_url)
+unsigned char* base64_decode(const char *data, size_t input_length, size_t *output_length, bool is_url)
 {
     char *table = is_url ? decoding_table_url : decoding_table;
 
@@ -97,12 +97,12 @@ unsigned char *base64_decode(const char *data, size_t input_length, size_t *outp
     if (decoded_data == NULL)
         return NULL;
 
-    for (int i = 0, j = 0; i < input_length;)
+    for (size_t i = 0, j = 0; i < input_length;)
     {
-        uint32_t sextet_a = data[i] == '=' ? 0 & i++ : table[data[i++]];
-        uint32_t sextet_b = data[i] == '=' ? 0 & i++ : table[data[i++]];
-        uint32_t sextet_c = data[i] == '=' ? 0 & i++ : table[data[i++]];
-        uint32_t sextet_d = data[i] == '=' ? 0 & i++ : table[data[i++]];
+        uint32_t sextet_a = data[i] == '=' ? 0 & i++ : (uint32_t)table[(unsigned char)data[i++]];
+        uint32_t sextet_b = data[i] == '=' ? 0 & i++ : (uint32_t)table[(unsigned char)data[i++]];
+        uint32_t sextet_c = data[i] == '=' ? 0 & i++ : (uint32_t)table[(unsigned char)data[i++]];
+        uint32_t sextet_d = data[i] == '=' ? 0 & i++ : (uint32_t)table[(unsigned char)data[i++]];
 
         uint32_t triple = (sextet_a << 3 * 6) + (sextet_b << 2 * 6) + (sextet_c << 1 * 6) + (sextet_d << 0 * 6);
 
