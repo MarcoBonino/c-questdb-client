@@ -29,9 +29,11 @@ ExternalProject_Add(
     SOURCE_DIR        ${LIBECC_SOURCE_DIR}
     BINARY_DIR        ${LIBECC_BINARY_DIR}
     CONFIGURE_COMMAND ""
-    BUILD_COMMAND     export BUILD_DIR=${LIBECC_BINARY_DIR}
-                      && make -j8 -C ${LIBECC_SOURCE_DIR} ${LIBECC_DEBUG} ${LIBECC_BINARY_DIR}/libsign.a
-    INSTALL_COMMAND   mv ${LIBECC_BINARY_DIR}/libsign.a ${CMAKE_BINARY_DIR}/libsign.a
+    BUILD_COMMAND        export BUILD_DIR=${LIBECC_BINARY_DIR}
+                      && export WITH_DYNAMIC_LIBS=1
+                      && make -j8 -C ${LIBECC_SOURCE_DIR} ${LIBECC_DEBUG} ${LIBECC_BINARY_DIR}/libsign.a ${LIBECC_BINARY_DIR}/libsign.so
+    INSTALL_COMMAND      mv ${LIBECC_BINARY_DIR}/libsign.a ${CMAKE_BINARY_DIR}/libsign.a
+                      && mv ${LIBECC_BINARY_DIR}/libsign.so ${CMAKE_BINARY_DIR}/libsign.so
     TEST_COMMAND      ""
 )
 add_definitions(-DWITH_STDLIB=1)
@@ -136,28 +138,38 @@ target_link_libraries(
     line_sender_c_example
     ${CMAKE_BINARY_DIR}/libsign.a)
 
-#add_executable(
-#    line_sender_cpp_example
-#    examples/line_sender_cpp_example.cpp)
-#target_link_libraries(
-#    line_sender_cpp_example
-#    c_questdb_client)  # example depending on dynamic lib.
+add_executable(
+    line_sender_cpp_example
+    examples/line_sender_cpp_example.cpp
+    ${LIBECC_EXT_DEPS}
+    )
+target_link_libraries(
+    line_sender_cpp_example
+    c_questdb_client)  # example depending on dynamic lib.
+target_link_libraries(
+    line_sender_cpp_example
+    ${CMAKE_BINARY_DIR}/libsign.so)
 
 # Unit test binary.
-#add_executable(
-#    test_line_sender
-#    test/mock_server.cpp
-#    test/test_line_sender.cpp)
-#target_link_libraries(
-#    test_line_sender
-#    c_questdb_client_static)
-#target_include_directories(
-#    test_line_sender
-#    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-#set_compile_flags(test_line_sender)
-#add_test(
-#    NAME test_line_sender
-#    COMMAND test_line_sender)
+add_executable(
+    test_line_sender
+    test/mock_server.cpp
+    test/test_line_sender.cpp
+    ${LIBECC_EXT_DEPS}
+)
+target_link_libraries(
+    test_line_sender
+    c_questdb_client_static)
+target_link_libraries(
+    test_line_sender
+    ${CMAKE_BINARY_DIR}/libsign.a)
+target_include_directories(
+    test_line_sender
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set_compile_flags(test_line_sender)
+add_test(
+    NAME test_line_sender
+    COMMAND test_line_sender)
 
 # System testing Python3 script.
 # This will download the latest QuestDB instance from Github,
