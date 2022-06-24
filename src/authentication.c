@@ -10,6 +10,11 @@
 #include <stdio.h>
 #include <string.h>
 
+int sign_challenge(const char *ec_name, const char *ec_sig_name, const char *hash_algorithm,
+                  const uint8_t *private_key, uint8_t private_key_len,
+                  const uint8_t *challenge, size_t challenge_len,
+                  uint8_t *sig, size_t *sig_len);
+
 void signChallenge(const char *challenge, size_t challenge_len, char **signature, size_t *signature_len)
 {
     const char *ec_name = "SECP256R1";
@@ -24,7 +29,7 @@ void signChallenge(const char *challenge, size_t challenge_len, char **signature
     size_t signature_bin_len = 0;
     uint8_t signature_bin[EC_MAX_SIGLEN];
 
-    sign_bin_file(ec_name, ec_sig_name, hash_algo,
+    sign_challenge(ec_name, ec_sig_name, hash_algo,
                   SECP256R1_ECDSA_private_key, (uint8_t)private_key_len,
                   (const uint8_t*)challenge, challenge_len,
                   signature_bin, &signature_bin_len);
@@ -84,7 +89,7 @@ int string_to_params(const char *ec_name, const char *ec_sig_name,
     return 0;
 }
 
-int sign_bin_file(const char *ec_name, const char *ec_sig_name, const char *hash_algorithm,
+int sign_challenge(const char *ec_name, const char *ec_sig_name, const char *hash_algorithm,
                   const uint8_t *private_key, uint8_t private_key_len,
                   const uint8_t *challenge, size_t challenge_len,
                   uint8_t *sig, size_t *sig_len)

@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.15.0)
 project(c-questdb-client VERSION 1.0.0)
 
+set(CMAKE_VERBOSE_MAKEFILE 1)
+
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 include(CPack)
@@ -25,12 +27,13 @@ include(ExternalProject)
 ExternalProject_Add(
     libecc
     GIT_REPOSITORY    https://github.com/ANSSI-FR/libecc.git
-    GIT_TAG           v0.9.5.1
+    GIT_TAG           617c30ad83252d20494e1ada6ed95b2f7d4505cf
     SOURCE_DIR        ${LIBECC_SOURCE_DIR}
     BINARY_DIR        ${LIBECC_BINARY_DIR}
     CONFIGURE_COMMAND ""
     BUILD_COMMAND        export BUILD_DIR=${LIBECC_BINARY_DIR}
                       && export WITH_DYNAMIC_LIBS=1
+                      && export WNOERROR=${APPLE} # libecc error when compiling on MacOS
                       && make -j8 -C ${LIBECC_SOURCE_DIR} ${LIBECC_DEBUG} ${LIBECC_BINARY_DIR}/libsign.a ${LIBECC_BINARY_DIR}/libsign.so
     INSTALL_COMMAND      mv ${LIBECC_BINARY_DIR}/libsign.a ${CMAKE_BINARY_DIR}/libsign.a
                       && mv ${LIBECC_BINARY_DIR}/libsign.so ${CMAKE_BINARY_DIR}/libsign.so
