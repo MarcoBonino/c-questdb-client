@@ -36,7 +36,7 @@ ExternalProject_Add(
                       && export WNOERROR=${APPLE} # libecc error when compiling on MacOS
                       && make -j8 -C ${LIBECC_SOURCE_DIR} ${LIBECC_DEBUG} ${LIBECC_BINARY_DIR}/libsign.a ${LIBECC_BINARY_DIR}/libsign.so
     INSTALL_COMMAND      mv ${LIBECC_BINARY_DIR}/libsign.a ${CMAKE_BINARY_DIR}/libsign.a
-                      && mv ${LIBECC_BINARY_DIR}/libsign.so ${CMAKE_BINARY_DIR}/libsign.so
+                      && cp ${LIBECC_BINARY_DIR}/libsign.so ${CMAKE_BINARY_DIR}/libsign.so
     TEST_COMMAND      ""
 )
 add_definitions(-DWITH_STDLIB=1)
@@ -86,6 +86,9 @@ target_include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${LIBECC_SOURCE_DIR}/src
 )
+target_link_libraries(
+    c_questdb_client
+    ${CMAKE_BINARY_DIR}/libsign.so)
 set_compile_flags(c_questdb_client)
 target_compile_definitions(
     c_questdb_client
